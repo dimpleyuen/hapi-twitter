@@ -1,0 +1,17 @@
+{
+  "name": "hapi-twitter",
+  "version": "0.0.1",
+  "description": "A backend API for Twittter built with Hapi and Mongo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dimple Yuen",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^0.8.2",
+    "hapi": "^8.4.0",
+    "hapi-mongodb": "^3.0.0",
+    "joi": "^6.1.2"
+  }
+}
