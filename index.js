@@ -11,14 +11,22 @@ server.connection({
 
 var plugins = [
   { register: require('./routes/users.js') },
-  { 
-    register: require('hapi-mongodb'),
+  { register: require('./routes/sessions.js') },
+  { register: require('hapi-mongodb'),
     options: {
       "url" : "mongodb://127.0.0.1:27017/hapi-twitter",
       "settings" : {
         "db" : {
           "native-parser": false
         }
+      }
+    }
+  },
+  { register: require('yar'),
+    options: {
+      cookieOptions: {
+        password: 'password',
+        isSecure: false //means you can use it without https
       }
     }
   }

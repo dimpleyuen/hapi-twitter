@@ -28,18 +28,18 @@ exports.register = function(server, options, next) {
       config: {
         handler: function(request, reply) {
           var db = request.server.plugins['hapi-mongodb'].db;
-          var newUser = request.payload.newUser;
+          var user = request.payload.user;
 
-          //encrypt with salt + hash/encryption
+          //encrypt with salt
           Bcrypt.genSalt(10, function(err, salt){
-            Bcrypt.hash(newUser.password, salt, function(err, hash){
-              newUser.password = hash;
+            Bcrypt.hash(user.password, salt, function(err, hash){
+              user.password = hash;
 
               //make sure its unique
               var uniqueUserQuery = { 
                 $or: [
-                  {username: newUser.username},
-                  {email: newUser.email }
+                  {username: user.username},
+                  {email: user.email }
                 ]
               };
 
@@ -49,7 +49,7 @@ exports.register = function(server, options, next) {
                   return reply('Error: Username already exists', err);
                 }
                 //otherwise, create the user
-                db.collection('users').insert(newUser, function(err, writeResult) {
+                db.collection('users').insert(user, function(err, writeResult) {
                   if (err) {
                     return reply('Internal MongoDB Error', err);
                   }
@@ -61,7 +61,7 @@ exports.register = function(server, options, next) {
         },
         validate: {
           payload: {
-            newUser: {
+            user: {
               username: Joi.string().min(3).max(20).required(),
               email: Joi.string().email().max(50).required(),
               password: Joi.string().min(5).max(20).required()
