@@ -46,7 +46,7 @@ exports.register = function(server, options, next) {
               db.collection('users').count(uniqueUserQuery, function(err, userExist) {
                 //if user does exist, reply an error
                 if (userExist) {
-                  return reply('Error: Username already exists', err);
+                  return reply({"message" : "User Exists"});
                 }
                 //otherwise, create the user
                 db.collection('users').insert(user, function(err, writeResult) {

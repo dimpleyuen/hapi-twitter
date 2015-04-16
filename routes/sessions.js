@@ -60,6 +60,24 @@ exports.register = function(server, options, next) {
       }
     },
 
+    { // GET REQUEST || SEE IF USER IS LOGGED IN
+      method: 'GET',
+      path: '/authenticated',
+      handler: function(request, reply) {
+        // retrieve the session information from the browser
+        var session = request.session.get('hapi_twitter_session');
+
+        //if there is a match in sessions collection, user is authenticated
+        var db = request.server.plugins['hapi-mongodb'].db
+        db.collection('sessions').findOne({ "session_id": session.session_key }, function(err, result) {
+          if (result === null) {
+            return reply({ "message": "Unauthenticated" });
+          } else {
+            return reply({ "message": "Authenticated" });
+          }
+        });
+      }
+    }
   ])
 
   next();
