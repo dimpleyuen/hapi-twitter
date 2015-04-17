@@ -45,7 +45,33 @@ exports.register = function(server, options, next) {
 
 
       }
+    },
+
+    { // POST REQUEST || POST A NEW TWEET
+      method: 'POST',
+      path: '/tweets',
+      handler: function(request, reply) {
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var tweet = request.payload.tweet;
+
+        Auth.authenticated(request, function(result) {
+          if (result.authenticated === false) {
+            return reply('Please Login First');
+          }
+          db.collection('tweets').insert(tweet, function(err, writeResult) {
+            if (err) {
+              return reply('Internal MongoDB Error', err);
+            }
+            reply(writeResult);
+          })
+          
+        })
+
+
+
+      }
     }
+
   ])
 
   next();
