@@ -81,7 +81,24 @@ exports.register = function(server, options, next) {
           }
         }
       }
-  }
+    },
+
+    { // GET REQUEST || GET ONE TWEET BY ID
+      method: 'GET',
+      path: '/tweets/{id}',
+      handler: function(request,reply) {
+        var id = encodeURIComponent(request.params.id);
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+
+        db.collection('tweets').findOne({"_id": ObjectId(id)}, function(err, tweet) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+          reply(tweet);
+        })
+      }
+    }
 
   ])
 
