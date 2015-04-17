@@ -3,7 +3,7 @@ var Bcrypt = require('bcrypt');
 exports.register = function(server, options, next) {
   
   server.route([
-    { // POST REQUEST || CREATE A SESSION
+    { // POST REQUEST || LOGIN + CREATE A SESSION
       method: 'POST',
       path: '/sessions',
       handler: function(request, reply) {
@@ -42,7 +42,7 @@ exports.register = function(server, options, next) {
                 }
 
                 //if there is no error, store session info into browser cookie with yar
-                //session name can be anything
+                //P.S session name can be anything
                 request.session.set('hapi_twitter_session', {
                   "session_key": randomKey,
                   "user_id": userMongo._id
@@ -60,22 +60,44 @@ exports.register = function(server, options, next) {
       }
     },
 
-    { // GET REQUEST || SEE IF USER IS LOGGED IN
-      method: 'GET',
-      path: '/authenticated',
-      handler: function(request, reply) {
-        // retrieve the session information from the browser
-        var session = request.session.get('hapi_twitter_session');
-
-        //if there is a match in sessions collection, user is authenticated
-        var db = request.server.plugins['hapi-mongodb'].db
-        db.collection('sessions').findOne({ "session_id": session.session_key }, function(err, result) {
-          if (result === null) {
-            return reply({ "message": "Unauthenticated" });
-          } else {
-            return reply({ "message": "Authenticated" });
+    { // GET REQUEST || CHECK IF LOGGED IN (AKA AUTHENTICATION)
+      method: "GET",
+      path: "/authenticated",
+      handler: function(request,reply){
+        var session = request.session.get("hapi_twitter_session");
+        var db = request.server.plugins['hapi-mongodb'].db;
+        
+        //check if there is a match in my sessions collection
+        db.collection('sessions').findOne({'session_id':session.session_key}, function(err, result){
+          if(result === null){
+            return reply({'message':'Unauthenticated'})
+          } else{
+            return reply({"message":"Authenticated"});
           }
         });
+      }
+    },
+
+    { // DELETE REQUEST || LOG OUT + DELETE A SESSION
+      method: 'DELETE',
+      path: '/sessions',
+      handler: function(request,reply) {
+        //obtain the session
+        var session = request.session.get('hapi_twitter_session');
+        var db = request.server.plugins['hapi-mongodb'].db;
+
+        //check if a session exists
+        if (!session) {
+          return reply({ "message": "Already Logged Out"});
+        }
+
+        //if it does exist, remove it from the collection
+        db.collection('sessions').remove({ "session_id": session.session_key }, function(err, result) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+            return reply({ "message": "Deleted" });
+        })
       }
     }
   ])

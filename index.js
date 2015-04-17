@@ -5,7 +5,10 @@ server.connection({
   host: '0.0.0.0',
   port: process.env.PORT || 3000, //process bit is for heroku deployment
   routes: {
-    cors: true
+    cors: {
+      headers: ['Access-Control-Allow-Credentials'],
+      credentials: true //if we allow credentials, ajax can send cookie to our browser
+    }
   }
 });
 

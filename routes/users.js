@@ -5,24 +5,7 @@ exports.register = function(server, options, next) {
   
   //include routes
   server.route([
-    //retrieve all users
-    {
-      method: 'GET',
-      path: '/users',
-      handler: function(request, reply) {
-        var db = request.server.plugins['hapi-mongodb'].db;
-
-        db.collection('users').find().toArray(function(err, users) {
-          if (err) {
-            return reply('Internal MongoDB Error', err);
-          }
-          reply(users);
-        })
-      }
-    },
-
-    //sign up new user
-    {
+    { // POST REQUEST || SIGN UP NEW USER
       method: 'POST',
       path: '/users',
       config: {
@@ -69,6 +52,21 @@ exports.register = function(server, options, next) {
           }
         }
       },
+    },
+
+    { //GET REQUEST || GET ALL USERS
+      method: 'GET',
+      path: '/users',
+      handler: function(request, reply) {
+        var db = request.server.plugins['hapi-mongodb'].db;
+
+        db.collection('users').find().toArray(function(err, users) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+          reply(users);
+        })
+      }
     }
   ])
 
