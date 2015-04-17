@@ -1,4 +1,5 @@
 var Bcrypt = require('bcrypt');
+var Auth = require('./auth');
 
 exports.register = function(server, options, next) {
   
@@ -64,17 +65,10 @@ exports.register = function(server, options, next) {
       method: "GET",
       path: "/authenticated",
       handler: function(request,reply){
-        var session = request.session.get("hapi_twitter_session");
-        var db = request.server.plugins['hapi-mongodb'].db;
-        
-        //check if there is a match in my sessions collection
-        db.collection('sessions').findOne({'session_id':session.session_key}, function(err, result){
-          if(result === null){
-            return reply({'message':'Unauthenticated'})
-          } else{
-            return reply({"message":"Authenticated"});
-          }
-        });
+        Auth.authenticated(request, function(result) {
+          //reply either authenticated or unauthenticated
+          reply(result);
+        })
       }
     },
 
@@ -82,11 +76,11 @@ exports.register = function(server, options, next) {
       method: 'DELETE',
       path: '/sessions',
       handler: function(request,reply) {
-        //obtain the session
+        //obtain the cookie information from the browser
         var session = request.session.get('hapi_twitter_session');
         var db = request.server.plugins['hapi-mongodb'].db;
 
-        //check if a session exists
+        //check if a cookie exists in the browser
         if (!session) {
           return reply({ "message": "Already Logged Out"});
         }
