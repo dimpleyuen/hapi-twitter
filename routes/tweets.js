@@ -18,35 +18,6 @@ exports.register = function(server, options, next) {
       }
     },
 
-    // { // GET REQUEST || GET TWEETS FROM ONE USER
-    //   method: 'GET',
-    //   path: '/users/{username}/tweets',
-    //   handler: function(request,reply) {
-    //     var db = request.server.plugins['hapi-mongodb'].db;
-    //     var username = encodeURIComponent(request.params.username);
-
-    //     db.collection('users').findOne({"username": username}, function(err, result) {
-    //       if (err) {
-    //         return reply('Internal MongoDB error', err);
-    //       }
-    //       if (result === null) {
-    //         return reply('User Does Not Exist');
-    //       }
-    //       if (result) {
-    //         //username refers to username found
-    //         db.collection('tweets').find({"user_id": username._id}).toArray(function(err, tweets) {
-    //           if (err) {
-    //             return reply('Internal MongoDB error', err);
-    //           }
-    //           reply(tweets);
-    //         })
-    //       }
-    //     })
-
-
-    //   }
-    // },
-
     { // POST REQUEST || POST A NEW TWEET
       method: 'POST',
       path: '/tweets',
@@ -96,6 +67,49 @@ exports.register = function(server, options, next) {
             return reply('Internal MongoDB Error', err);
           }
           reply(tweet);
+        })
+      }
+    },
+
+    { // DELETE REQUEST || DELETE TWEET BY ID
+      method: 'DELETE',
+      path: '/tweets/{id}',
+      handler: function(request, reply) {
+        var id = encodeURIComponent(request.params.id);
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+
+        db.collection('tweets').remove({"_id": ObjectId(id)}, function(err, writeResult) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+          reply(writeResult);
+        })
+      }
+    },
+
+    { // GET REQUEST || GET TWEETS BY USER
+      method: 'GET',
+      path: '/users/{username}/tweets',
+      handler: function(request,reply) {
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var username = encodeURIComponent(request.params.username);
+
+        db.collection('users').findOne({"username": username}, function(err, result) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+          if (result === null) {
+            return reply('User Does Not Exist');
+          }
+          if (result) {
+            db.collection('tweets').find({"user_id": result._id}).toArray(function(err, tweets) {
+              if (err) {
+                return reply('Internal MongoDB Error', err);
+              }
+              reply(tweets);
+            })
+          }
         })
       }
     }
