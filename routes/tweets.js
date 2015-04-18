@@ -27,10 +27,18 @@ exports.register = function(server, options, next) {
           var session = request.session.get("hapi_twitter_session");
           var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
 
-          var tweet = {
-            "message" : request.payload.tweet.message,
-            "user_id" : ObjectId(session.user_id)
-          }
+          var tweet = {};
+
+          db.collection('users').findOne( {"_id": ObjectId(session.user_id)}, function(err, result){
+            if (err) {
+              return reply('Internal MongDB Error', err);
+            }
+            tweet = {
+              "message" : request.payload.tweet.message,
+              "user_id" : ObjectId(session.user_id),
+              "username": result.username
+            }
+          })
 
           Auth.authenticated(request, function(result) {
             if (result.authenticated === false) {
