@@ -27,28 +27,31 @@ exports.register = function(server, options, next) {
           var session = request.session.get("hapi_twitter_session");
           var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
 
-          var tweet = {};
-
-          db.collection('users').findOne( {"_id": ObjectId(session.user_id)}, function(err, result){
-            if (err) {
-              return reply('Internal MongDB Error', err);
-            }
-            tweet = {
-              "message" : request.payload.tweet.message,
-              "user_id" : ObjectId(session.user_id),
-              "username": result.username
-            }
-          })
-
           Auth.authenticated(request, function(result) {
             if (result.authenticated === false) {
               return reply('Please Login First');
             }
-            db.collection('tweets').insert(tweet, function(err, writeResult) {
+            
+            var tweet = {};
+
+            db.collection('users').findOne( {"_id": ObjectId(session.user_id)}, function(err, result){
               if (err) {
-                return reply('Internal MongoDB Error', err);
+                return reply('Internal MongDB Error', err);
               }
-              reply(writeResult);
+              if (result) {
+                tweet = {
+                  "message" : request.payload.tweet.message,
+                  "user_id" : ObjectId(session.user_id),
+                  "username": result.username
+                }
+                
+                db.collection('tweets').insert(tweet, function(err, writeResult) {
+                  if (err) {
+                    return reply('Internal MongoDB Error', err);
+                  }
+                  reply(writeResult);
+                })
+              }
             })
           })
         },
