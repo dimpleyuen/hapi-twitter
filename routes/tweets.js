@@ -42,7 +42,8 @@ exports.register = function(server, options, next) {
                 tweet = {
                   "message" : request.payload.tweet.message,
                   "user_id" : ObjectId(session.user_id),
-                  "username": result.username
+                  "username": result.username,
+                  "date" : Date()
                 }
                 
                 db.collection('tweets').insert(tweet, function(err, writeResult) {
@@ -87,15 +88,41 @@ exports.register = function(server, options, next) {
       path: '/tweets/{id}',
       handler: function(request, reply) {
         var id = encodeURIComponent(request.params.id);
-        var db = request.server.plugins['hapi-mongodb'].db;
         var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var session = request.session.get("hapi_twitter_session");
 
-        db.collection('tweets').remove({"_id": ObjectId(id)}, function(err, writeResult) {
+        //go to tweets collection and see who tweeted it
+        db.collection('tweets').findOne({"_id": ObjectId(id)}, function(err, tweet) {
           if (err) {
             return reply('Internal MongoDB Error', err);
           }
-          reply(writeResult);
+          if (tweet === null) {
+            return reply('Tweet Does Not Exist');
+          }
+          //if the tweet exists, take the user_id and find if theres a match in sessions collections
+          if (tweet) {
+            db.collection('sessions').findOne( {"user_id" : ObjectId(tweet.user_id)}, function(err, result) {
+              if (err) {
+                return reply('Internal MongoDB Error', err);
+              }
+              //if there's no match, not authorized
+              if (result === null) {
+                return reply({'authorized' : false})
+              }
+              //if there's a match, delete it
+              if (result) {
+                db.collection('tweets').remove({"_id": ObjectId(id)}, function(err, writeResult) {
+                  if (err) {
+                    return reply('Internal MongoDB Error', err);
+                  }
+                  reply(writeResult);
+                })
+              }
+            })
+          }
         })
+
       }
     },
 
