@@ -78,7 +78,12 @@ exports.register = function(server, options, next) {
           if (err) {
             return reply('Internal MongoDB Error', err);
           }
-          reply(tweet);
+          if (tweet === null) {
+            return reply('Tweet Does Not Exist');
+          }
+          if (tweet) {
+            reply(tweet);
+          }
         })
       }
     },
