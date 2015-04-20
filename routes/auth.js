@@ -21,10 +21,16 @@ module.exports.authenticated = function(request, callback) {
         'authenticated': false
       });
     } else {
-      return callback({
-        "message":"Authenticated",
-        'authenticated': true
-      });
+      var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+      
+      db.collection('users').findOne({"_id" : ObjectId(session.user_id)}, function(err, user) {
+        return callback({
+          "message":"Authenticated",
+          'authenticated': true,
+          "user_id": session.user_id,
+          "username": user.username
+        });
+      })
     }
   });
 

@@ -170,7 +170,27 @@ exports.register = function(server, options, next) {
           reply(result);
         })
       }
+    },
+
+    { // GET REQUEST || GET NUMBER OF TWEETS BY USER
+      method: 'GET',
+      path: '/tweets/{username}/count',
+      handler: function(request, reply) {
+        var db = request.server.plugins['hapi-mongodb'].db;
+        var username = encodeURIComponent(request.params.username);
+
+        db.collection('tweets').count({ "username" : username}, function(err, count) {
+          if (err) {
+            return reply('Internal MongoDB Error', err);
+          }
+          if (count) {
+            return reply(count);
+          }
+        })
+        
+      }
     }
+
 
   ])
 
